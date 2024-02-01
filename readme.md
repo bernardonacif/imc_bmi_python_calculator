@@ -12,7 +12,7 @@ Este projeto em Python tem como objetivo calcular o Índice de Massa Corporal (I
 
 Clone o repositório:
 ````
-git clone https://github.com/seu-usuario/seu-projeto-imc.git
+git clone https://github.com/bernardonacif/imc_python_calculator.git
 cd seu-projeto-imc
 ````
 
@@ -43,7 +43,7 @@ Used Libraries:
 Clone the repository:
 
 ````
-git clone https://github.com/your-username/your-bmi-project.git
+git clone https://github.com/bernardonacif/imc_python_calculator.git
 cd your-bmi-project
 ````
 Install the required libraries:
