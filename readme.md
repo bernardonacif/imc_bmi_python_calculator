@@ -2,8 +2,19 @@
 
 Projeto/Estudo em Python com o objetivo de calcular o Índice de Massa Corporal (IMC) com base nos dados de altura e peso fornecidos pelo usuário, assim gerando um gráfico e tabela comparativo.
 
+Foco em modalagem de dados, geração de tabelas e gráficos dinamicos de acordo com os cálculos.
 
-![Gráfico gerado após a execução do script](https://i.ibb.co/FHmkfhT/Unknown.png)
+#### Gráfico:
+
+![Gráfico gerado após a execução do script](https://i.ibb.co/419SW8c/Unknown-2.png)
+
+#### Tabelas:
+
+![Tabela1](https://i.ibb.co/SdDNxzG/Screenshot-2024-02-02-at-8-37-25-PM.png)
+
+![Tabela2](https://i.ibb.co/L1TS9ZS/Screenshot-2024-02-02-at-8-38-11-PM.png)
+
+![Tabela3](https://i.ibb.co/4p97Jn9/Screenshot-2024-02-02-at-8-45-22-PM.png)
 
 #### Bibliotecas Utilizadas
 
