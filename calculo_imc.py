@@ -94,7 +94,7 @@ print('Tabela 3: Dados usuário.')
 
 x = PrettyTable()
 x.field_names = ["Nome", "Peso", "IMC", "Categoria"]
-x.add_row([usuario, peso_usuario, imc_usuario, categoria_usuario])
+x.add_row([usuario, peso_usuario, round(imc_usuario, 2), categoria_usuario])
 print(x)
 
 

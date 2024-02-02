@@ -14,7 +14,7 @@ Foco em modalagem de dados, geração de tabelas e gráficos dinamicos de acordo
 
 ![Tabela2](https://i.ibb.co/L1TS9ZS/Screenshot-2024-02-02-at-8-38-11-PM.png)
 
-![Tabela3](https://i.ibb.co/4p97Jn9/Screenshot-2024-02-02-at-8-45-22-PM.png)
+![Tabela3](https://i.ibb.co/KF2nN5h/Screenshot-2024-02-02-at-8-54-36-PM.png)
 
 #### Bibliotecas Utilizadas
 
