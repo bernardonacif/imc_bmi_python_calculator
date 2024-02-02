@@ -1,6 +1,6 @@
 ### Cálculo do Índice de Massa Corporal (IMC) em Python
 
-Este projeto em Python tem como objetivo calcular o Índice de Massa Corporal (IMC) com base nos dados de altura e peso fornecidos pelo usuário.
+Projeto/Estudo em Python com o objetivo de calcular o Índice de Massa Corporal (IMC) com base nos dados de altura e peso fornecidos pelo usuário, assim gerando um gráfico e tabela comparativo.
 
 
 ![Gráfico gerado após a execução do script](https://i.ibb.co/FHmkfhT/Unknown.png)
@@ -13,18 +13,56 @@ Este projeto em Python tem como objetivo calcular o Índice de Massa Corporal (I
 
 #### Como Usar
 
-Clone o repositório:
+##### Clone o repositório:
 ````
 git clone https://github.com/bernardonacif/imc_python_calculator.git
 cd seu-projeto-imc
 ````
 
-Instale a bibliotecas
+##### Instale o Virtualenv (se ainda não estiver instalado):
+````
+pip install virtualenv
+````
+
+##### Crie e inicie o ambiete virtual
+
+###### MacOS
+
+Criar
+````
+python3 -m venv venv
+````
+
+Iniciar
+````
+source venv/bin/activate
+````
+
+###### Windows
+
+Criar
+````
+python -m venv venv
+````
+
+Iniciar com POWERSHELL
+````
+.\venv\Scripts\Activate.ps1
+````
+
+Iniciar com CMD
+````
+.\venv\Scripts\Activate.bat
+````
+
+
+##### Instale a bibliotecas
+
 ````
 pip install -r requirements.txt
 ````
 
-Execute o script calculo_imc.py
+##### Execute o script calculo_imc.py
 
 ````
 python3 calculo_imc.py
