@@ -3,7 +3,7 @@
 Este projeto em Python tem como objetivo calcular o Índice de Massa Corporal (IMC) com base nos dados de altura e peso fornecidos pelo usuário.
 
 
-![Gráfico gerado após a execução do script]([URL_da_Imagem](https://ibb.co/5KGXz1H))
+![Gráfico gerado após a execução do script](https://i.ibb.co/FHmkfhT/Unknown.png)
 
 #### Bibliotecas Utilizadas
 
