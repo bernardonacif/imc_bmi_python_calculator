@@ -1,0 +1,26 @@
+# cfg v0.1
+date: 2024-02-05
+user_cfg:
+  language_support: 
+    - PT/BR
+    - ENG/US
+  units_support: 
+    - metric
+    - imperial
+  language: PT/BR
+  unit: metric
+sql_cfg:
+  use_sql: 1
+report_cfg: 
+  type_support: 
+    - pdf
+  type: pdf
+  active: 0
+  local: ./reports
+  format_name: usuario_teste0001
+  send_by_email: 0
+    email_cfg
+      - user
+      - api 
+notes: >
+  check documentation for use this
