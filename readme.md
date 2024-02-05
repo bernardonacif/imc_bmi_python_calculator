@@ -1,4 +1,4 @@
-### Cálculo do Índice de Massa Corporal (IMC) em Python
+### Cálculo do Índice de Massa Corporal (IMC) com Python
 
 Projeto/Estudo em Python com o objetivo de calcular o Índice de Massa Corporal (IMC) com base nos dados de altura e peso fornecidos pelo usuário, assim gerando um gráfico e tabela comparativo.
 
