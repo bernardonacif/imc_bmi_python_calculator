@@ -17,7 +17,7 @@ report_cfg:
   type: pdf
   active: 0
   local: ./reports
-  format_name: usuario_teste0001
+  format_name: './reports/{user}_{today}.pdf'
   send_by_email: 0
     email_cfg
       - user

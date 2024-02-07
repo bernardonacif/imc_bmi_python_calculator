@@ -5,6 +5,11 @@ from matplotlib import cm
 from prettytable import PrettyTable
 import yaml
 import sqlite3
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from datetime import date
 
 class App:
     def __init__(self, name, age, weight, height, user, user_email):
@@ -102,7 +107,7 @@ class App:
     def generate_data(self):
         # Criar DataFrame's a partir das listas
         self.df = pd.DataFrame(self.dados)
-        df_ideal_weight = pd.DataFrame(self.ideal_weight)
+        self.df_ideal_weight = pd.DataFrame(self.ideal_weight)
         # print(df)
         
         # Gravar dados do usuario na tbl SQLite
@@ -156,8 +161,8 @@ class App:
         
         print('Tabela 1: Pesos ideais.')
         
-        tabela_pretty = PrettyTable(df_ideal_weight.columns.tolist())
-        tabela_pretty.add_rows(df_ideal_weight.values)
+        tabela_pretty = PrettyTable(self.df_ideal_weight.columns.tolist())
+        tabela_pretty.add_rows(self.df_ideal_weight.values)
         print(tabela_pretty)
         
         print('Tabela 2: Comparativo.')
@@ -206,7 +211,39 @@ class App:
         ax.set_xticks(range(0, self.top_range_weight, 10))
         
         # Exibir o gráfico
-        plt.show()
+        # plt.show()
+        plt.savefig('./tmp/grafico.png')
+
+    def generate_pdf(self):
+        # Criar PDF
+        today = date.today().strftime("%Y-%m-%d")
+        filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
+        pdf_filename = filename
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        styles = getSampleStyleSheet()
+        style_heading = styles['Heading1']
+        # self.df_ideal_weight
+        # Criar tabela a partir do DataFrame
+        table_data = [self.df_ideal_weight.columns.tolist()] + self.df_ideal_weight.values.tolist()
+        table = Table(table_data)
+        table.setStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                         ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+        doc.build([Paragraph('Relatório', style_heading),
+                   Paragraph('Dados:', styles['Heading2']),
+                   table,  # Esta linha insere a tabela no PDF
+                   Spacer(1, 12),
+                   Paragraph('Gráfico:', styles['Heading2']),
+                   Paragraph('<img src="./tmp/grafico.png" width="500" height="300"/>', styles['BodyText']),
+                   ])
+        
+        print(f'PDF gerado com sucesso: {pdf_filename}')
+
+
 
 if __name__ == "__main__":
     # Exemplo de uso:
@@ -216,3 +253,4 @@ if __name__ == "__main__":
     app.calculate()
     app.generate_data()
     app.generate_graph()
+    app.generate_pdf()
