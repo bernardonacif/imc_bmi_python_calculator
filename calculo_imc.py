@@ -9,7 +9,11 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import pagesizes
+from reportlab.platypus import PageBreak
+from reportlab.lib.units import inch
 from datetime import date
+
 
 class App:
     def __init__(self, name, age, weight, height, user, user_email):
@@ -215,14 +219,12 @@ class App:
         plt.savefig('./tmp/grafico.png')
 
     def generate_pdf(self):
-        # Criar PDF
         today = date.today().strftime("%Y-%m-%d")
         filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
         pdf_filename = filename
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
         styles = getSampleStyleSheet()
         style_heading = styles['Heading1']
-        # self.df_ideal_weight
         # Criar tabela a partir do DataFrame
         table_data = [self.df_ideal_weight.columns.tolist()] + self.df_ideal_weight.values.tolist()
         table = Table(table_data)
@@ -233,18 +235,61 @@ class App:
                          ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                          ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                          ('GRID', (0, 0), (-1, -1), 1, colors.black)])
-        doc.build([Paragraph('Relatório', style_heading),
+        doc.build([Paragraph(f'Relatório IMC', style_heading),
+                   Paragraph(f'Nome: {self.name}', styles['Heading2']),
+                   Paragraph(f'Data: {today}', styles['Heading2']),
                    Paragraph('Dados:', styles['Heading2']),
                    table,  # Esta linha insere a tabela no PDF
                    Spacer(1, 12),
-                   Paragraph('Gráfico:', styles['Heading2']),
+                   Paragraph('Gráfico comparativo:', styles['Heading2']),
                    Paragraph('<img src="./tmp/grafico.png" width="500" height="300"/>', styles['BodyText']),
                    ])
         
         print(f'PDF gerado com sucesso: {pdf_filename}')
 
-
-
+    def generate_pdf_v2(self):
+        today = date.today().strftime("%Y-%m-%d")
+        filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
+        pdf_filename = filename
+        # Define a página com margens maiores para acomodar melhor os elementos
+        doc = SimpleDocTemplate(pdf_filename, pagesize=pagesizes.letter, leftMargin=50, rightMargin=50, topMargin=50, bottomMargin=50)
+        styles = getSampleStyleSheet()
+        style_heading = styles['Heading1']
+        
+        # Criar uma lista vazia para armazenar os elementos do PDF
+        story = []
+        
+        # Adicionar os elementos à lista 'story'
+        story.append(Paragraph(f'Relatório IMC', style_heading))
+        story.append(Paragraph(f'Nome: {self.name}', styles['Heading2']))
+        story.append(Paragraph(f'Data: {today}', styles['Heading2']))
+        story.append(Paragraph('Dados:', styles['Heading2']))
+        
+        # Adicionar a tabela à lista 'story'
+        table_data = [self.df_ideal_weight.columns.tolist()] + self.df_ideal_weight.values.tolist()
+        table = Table(table_data)
+        table.setStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                         ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+        story.append(table)
+        
+        # Adicionar uma quebra de página antes de inserir o gráfico
+        story.append(PageBreak())
+        story.append(Paragraph('Gráfico comparativo:', styles['Heading2']))
+        # Adicione um espaço extra após o gráfico para garantir que ele tenha espaço suficiente na próxima página
+        story.append(Paragraph('<img src="./tmp/grafico.png" width="500" height="300"/>', styles['BodyText']))
+        story.append(Spacer(1, inch * 1))
+        
+        # Construir o PDF com a lista 'story'
+        doc.build(story)
+    
+        
+        
+    
 if __name__ == "__main__":
     # Exemplo de uso:
     app = App(name="João", age=30, weight=70, height=1.75, user="joao123", user_email="joao@example.com")
@@ -253,4 +298,4 @@ if __name__ == "__main__":
     app.calculate()
     app.generate_data()
     app.generate_graph()
-    app.generate_pdf()
+    app.generate_pdf_v2()
