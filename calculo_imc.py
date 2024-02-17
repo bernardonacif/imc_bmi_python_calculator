@@ -10,19 +10,19 @@ from datetime import date
 
 # from reportlab.lib import colors
 # from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer, KeepTogether, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # from reportlab.lib import pagesizes
 # from reportlab.platypus import PageBreak
 # from reportlab.lib.units import inch
 
 #texto
-from reportlab.pdfgen import canvas
+# from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
 # tabela
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+# from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, HRFlowable
 
 
@@ -303,6 +303,23 @@ class App:
         elements.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.black))
         elements.append(Paragraph("<br/><br/>", estilo_normal))
     
+        # Grafico
+
+        image_path = "./tmp/grafico.png"  # Substitua pelo caminho da sua imagem
+        
+        # Obtendo as dimensões originais da imagem
+        imagem = Image(image_path)
+        largura_original, altura_original = imagem.drawWidth, imagem.drawHeight
+        
+        # Reduzindo a imagem em 20%
+        largura_reduzida = largura_original * 0.8
+        altura_reduzida = altura_original * 0.8
+        
+        imagem_reduzida = Image(image_path, width=largura_reduzida, height=altura_reduzida)
+        elements.append(imagem_reduzida)
+
+
+        
         # Tabela_1: Pesos Ideais
         subtitulo_pesos_ideais = Paragraph("Tabela 1: Pesos Ideais:", estilo_subtitulo)
         pula_linha = Paragraph("<br/><br/>", estilo_normal)
