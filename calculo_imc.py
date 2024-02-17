@@ -10,7 +10,7 @@ from datetime import date
 
 # from reportlab.lib import colors
 # from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # from reportlab.lib import pagesizes
 # from reportlab.platypus import PageBreak
@@ -162,37 +162,38 @@ class App:
             
             # print(f'ora, ora, temos um problema aqui...{categoria_usuario}')
         
-          df_filter = self.df[self.df['Categoria'].between(categoria_base, categoria_top)]
-          df_filter.loc[df_filter['Peso'] == round_peso_usuario, 'user_'] = 'você'
-          df_filter = df_filter.fillna('-')
+          self.df_filter = self.df[self.df['Categoria'].between(categoria_base, categoria_top)]
+          self.df_filter.loc[self.df_filter['Peso'] == round_peso_usuario, 'user_'] = 'você'
+          self.df_filter = self.df_filter.fillna('-')
         
         else:  
-          df_filter = self.df[self.df['Peso'].between(peso_base, peso_top)]
-          df_filter.loc[df_filter['Peso'] == round_peso_usuario, 'user_'] = 'você'
-          df_filter = df_filter.fillna('-')
+          self.df_filter = self.df[self.df['Peso'].between(peso_base, peso_top)]
+          self.df_filter.loc[self.df_filter['Peso'] == round_peso_usuario, 'user_'] = 'você'
+          self.df_filter = self.df_filter.fillna('-')
         
         # print(df_filter.to_string(index=False))
         
-        # Imprimir a tabela ajustada
         
-        print('Tabela 1: Pesos ideais.')
+        def print_tables():
+            # Imprimir a tabelas ajustadas - deabilitado - apenas para debug ou visualizar no terminal
+            print('Tabela 1: Pesos ideais.')
+            
+            tabela_pretty = PrettyTable(self.df_ideal_weight.columns.tolist())
+            tabela_pretty.add_rows(self.df_ideal_weight.values)
+            print(tabela_pretty)
+            
+            print('Tabela 2: Comparativo.')
+            
+            tabela_pretty = PrettyTable(self.df_filter.columns.tolist())
+            tabela_pretty.add_rows(self.df_filter.values)
+            print(tabela_pretty)
+            
+            print('Tabela 3: Dados usuário.')
         
-        tabela_pretty = PrettyTable(self.df_ideal_weight.columns.tolist())
-        tabela_pretty.add_rows(self.df_ideal_weight.values)
-        print(tabela_pretty)
-        
-        print('Tabela 2: Comparativo.')
-        
-        tabela_pretty = PrettyTable(df_filter.columns.tolist())
-        tabela_pretty.add_rows(df_filter.values)
-        print(tabela_pretty)
-        
-        print('Tabela 3: Dados usuário.')
-    
-        x = PrettyTable()
-        x.field_names = ["Nome", "Peso", "IMC", "Categoria"]
-        x.add_row([self.user, self.weight, round(self.imc_usuario, 2), self.categoria_usuario])
-        print(x)
+            x = PrettyTable()
+            x.field_names = ["Nome", "Peso", "IMC", "Categoria"]
+            x.add_row([self.user, self.weight, round(self.imc_usuario, 2), self.categoria_usuario])
+            print(x)
 
     def generate_graph(self):
         # Ajuste df para indices do grafico
@@ -230,75 +231,6 @@ class App:
         # plt.show()
         plt.savefig('./tmp/grafico.png')
 
-    def generate_pdf(self):
-        today = date.today().strftime("%Y-%m-%d")
-        filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
-        pdf_filename = filename
-        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
-        styles = getSampleStyleSheet()
-        style_heading = styles['Heading1']
-        # Criar tabela a partir do DataFrame
-        table_data = [self.df_ideal_weight.columns.tolist()] + self.df_ideal_weight.values.tolist()
-        table = Table(table_data)
-        table.setStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                         ('GRID', (0, 0), (-1, -1), 1, colors.black)])
-        doc.build([Paragraph(f'Relatório IMC', style_heading),
-                   Paragraph(f'Nome: {self.name}', styles['Heading2']),
-                   Paragraph(f'Data: {today}', styles['Heading2']),
-                   Paragraph('Dados:', styles['Heading2']),
-                   table,  # Esta linha insere a tabela no PDF
-                   Spacer(1, 12),
-                   Paragraph('Gráfico comparativo:', styles['Heading2']),
-                   Paragraph('<img src="./tmp/grafico.png" width="500" height="300"/>', styles['BodyText']),
-                   ])
-        
-        print(f'PDF gerado com sucesso: {pdf_filename}')
-
-    def generate_pdf_v2(self):
-        today = date.today().strftime("%Y-%m-%d")
-        filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
-        pdf_filename = filename
-        # Define a página com margens maiores para acomodar melhor os elementos
-        doc = SimpleDocTemplate(pdf_filename, pagesize=pagesizes.letter, leftMargin=50, rightMargin=50, topMargin=50, bottomMargin=50)
-        styles = getSampleStyleSheet()
-        style_heading = styles['Heading1']
-        
-        # Criar uma lista vazia para armazenar os elementos do PDF
-        story = []
-        
-        # Adicionar os elementos à lista 'story'
-        story.append(Paragraph(f'Relatório IMC', style_heading))
-        story.append(Paragraph(f'Nome: {self.name}', styles['Heading2']))
-        story.append(Paragraph(f'Data: {today}', styles['Heading2']))
-        story.append(Paragraph('Dados:', styles['Heading2']))
-        
-        # Adicionar a tabela à lista 'story'
-        table_data = [self.df_ideal_weight.columns.tolist()] + self.df_ideal_weight.values.tolist()
-        table = Table(table_data)
-        table.setStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                         ('GRID', (0, 0), (-1, -1), 1, colors.black)])
-        story.append(table)
-        
-        # Adicionar uma quebra de página antes de inserir o gráfico
-        story.append(PageBreak())
-        story.append(Paragraph('Gráfico comparativo:', styles['Heading2']))
-        # Adicione um espaço extra após o gráfico para garantir que ele tenha espaço suficiente na próxima página
-        story.append(Paragraph('<img src="./tmp/grafico.png" width="500" height="300"/>', styles['BodyText']))
-        story.append(Spacer(1, inch * 1))
-        
-        # Construir o PDF com a lista 'story'
-        doc.build(story)
-
     # Funcoes propriedades para gerar PDF
 
     def mm_to_point(self, mm):
@@ -323,91 +255,6 @@ class App:
         for row in dataframe.itertuples(index=False):
             data.append(list(row))
         return data
-
-
-    def generate_pdf_v3(self):
-        today = date.today().strftime("%Y-%m-%d")
-        pdf_filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
-        pdf = canvas.Canvas(pdf_filename, pagesize=A4)
-        page_width, page_height = A4
-        # pdf.drawString(self.mm_to_point(20), self.mm_to_point(100), 'Teste cabeçalho')
-        
-        #titulo
-        pdf.setFont('Helvetica-Bold', 18)
-        text = "Relatório IMC"
-        top = self.mm_to_point(25)
-        self.posicionar_texto_centro(pdf, text, page_width, page_height, top)
-
-        # data
-        pdf.setFont('Helvetica', 12)
-        text = f'Data Emissão:    {date.today().strftime("%d-%m-%y")}'
-        y_distance = self.mm_to_point(48)
-        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-
-        # traço
-        margin = 20  # 2 cm em milímetros
-        pdf.line(margin, page_height - self.mm_to_point(50), page_width - margin, page_height - self.mm_to_point(50))
-        
-        # dados usuario
-        distancia = 60 #variavel para controlar a distancia horizontal entre os elementos
-        
-        pdf.setFont('Helvetica', 12)
-        text = f'Nome: {self.name}'
-        y_distance = self.mm_to_point(distancia)
-        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-        distancia = distancia + 5
-        
-        text = f'Idade: {self.age}'
-        y_distance = self.mm_to_point(distancia)
-        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-        distancia = distancia + 5
-
-        text = f'IMC: {round(self.imc_usuario, 2)}'
-        y_distance = self.mm_to_point(distancia)
-        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-        distancia = distancia + 5
-
-        text = f'Categoria: {self.categoria_usuario.title()}'
-        y_distance = self.mm_to_point(distancia)
-        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-        distancia = distancia + 5
-
-        # traço
-        distancia = distancia + 5
-        margin = 20  # 2 cm em milímetros
-        pdf.line(margin, page_height - self.mm_to_point(distancia), page_width - margin, page_height - self.mm_to_point(distancia))
-        
-        # tabela_1 - Pesos Ideais
-        self.data = self.dataframe_to_table(self.df_ideal_weight)
-
-        elements=[]
-        table = Table(self.data)
-
-        # Estilo da tabela
-        doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
-        style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.gray),
-                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                            ('GRID', (0, 0), (-1, -1), 1, colors.black)])
-        
-        table.setStyle(style)
-        elements.append(table)
-
-        # # Adicionar a tabela à página em uma posição específica (X, Y)
-        # table.wrapOn(doc, 400, 500)  # Posição X = 400, Posição Y = 500
-        # table.drawOn(doc, 100, 600)  # Posição X = 100, Posição Y = 600
-
-        doc.build(elements)
-
-        
-        # y_distance = self.mm_to_point(distancia)
-        # self.posicionar_texto_canto(pdf, text, page_height, y_distance)
-        # distancia = distancia + 5
-
-        pdf.save()
     
     def generate_pdf_v4(self):
         today = date.today().strftime("%Y-%m-%d")
@@ -422,6 +269,12 @@ class App:
         estilo_normal = styles['Normal']
         estilo_titulo = styles['Heading1']
         estilo_titulo.alignment = 1  # 0 para alinhar à esquerda, 1 para centralizar, 2 para alinhar à direita
+
+        # Estilo para subtítulos
+        estilo_subtitulo = ParagraphStyle(name='Subtitulo', parent=estilo_normal)
+        estilo_subtitulo.fontSize = 11
+        estilo_subtitulo.textColor = colors.gray
+        estilo_subtitulo.alignment = 1
         
         # Título
         titulo = Paragraph("Relatório IMC", estilo_titulo)
@@ -449,9 +302,11 @@ class App:
         # Linha divisória
         elements.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.black))
         elements.append(Paragraph("<br/><br/>", estilo_normal))
-        elements.append(Paragraph("<br/><br/>", estilo_normal))
     
-        # Tabela de Pesos Ideais
+        # Tabela_1: Pesos Ideais
+        subtitulo_pesos_ideais = Paragraph("Tabela 1: Pesos Ideais:", estilo_subtitulo)
+        pula_linha = Paragraph("<br/><br/>", estilo_normal)
+
         tabela_pesos_ideais = Table(self.dataframe_to_table(self.df_ideal_weight))
         tabela_pesos_ideais.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
@@ -462,7 +317,28 @@ class App:
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
-        elements.append(tabela_pesos_ideais)
+        # elements.append(tabela_pesos_ideais)
+        elements.append(KeepTogether([subtitulo_pesos_ideais, pula_linha, tabela_pesos_ideais]))
+
+        elements.append(Paragraph("<br/><br/>", estilo_normal))
+
+        # Tabela_2: Coparativo
+        subtitulo_comparativo = Paragraph("Tabela 2: Comparativo:", estilo_subtitulo)
+        pula_linha = Paragraph("<br/><br/>", estilo_normal)
+
+        tabela_comparativo = Table(self.dataframe_to_table(self.df_filter))
+        tabela_comparativo.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        # elements.append(tabela_comparativo)
+        elements.append(KeepTogether([subtitulo_comparativo, pula_linha, tabela_comparativo]))
+
     
         # Construir o PDF
         doc.build(elements)
