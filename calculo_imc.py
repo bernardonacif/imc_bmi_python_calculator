@@ -5,14 +5,26 @@ from matplotlib import cm
 from prettytable import PrettyTable
 import yaml
 import sqlite3
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
+from datetime import date
+
+
+# from reportlab.lib import colors
+# from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import pagesizes
-from reportlab.platypus import PageBreak
-from reportlab.lib.units import inch
-from datetime import date
+# from reportlab.lib import pagesizes
+# from reportlab.platypus import PageBreak
+# from reportlab.lib.units import inch
+
+#texto
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+# tabela
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, HRFlowable
+
 
 
 class App:
@@ -115,7 +127,7 @@ class App:
         # print(df)
         
         # Gravar dados do usuario na tbl SQLite
-        categoria_usuario = self.df.loc[self.df['IMC'] <= self.imc_usuario, 'Categoria'].iloc[-1]
+        self.categoria_usuario = self.df.loc[self.df['IMC'] <= self.imc_usuario, 'Categoria'].iloc[-1]
         
         if self.cfg_data['sql_cfg']['use_sql'] == 1:
             try:
@@ -124,7 +136,7 @@ class App:
                 try:
                     # report_id|user_id|weight|height|imc_bmi|category|measures_type|date|
                     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, categoria_usuario, self.unit_type))
+                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria_usuario, self.unit_type))
                     conn.commit()
                 except sqlite3.Error as e:
                            print(f'Erro: SQLite insert error. {e}')     
@@ -139,13 +151,13 @@ class App:
         peso_top = round_peso_usuario + 10
         
         
-        if categoria_usuario != 'intervalo normal':
+        if self.categoria_usuario != 'intervalo normal':
           # descobrindo peso ideal
-          if categoria_usuario == 'baixo peso':
+          if self.categoria_usuario == 'baixo peso':
             categoria_top = 'intervalo normal'
-            categoria_base = categoria_usuario
+            categoria_base = self.categoria_usuario
           else:
-            categoria_top = categoria_usuario
+            categoria_top = self.categoria_usuario
             categoria_base = 'intervalo normal'
             
             # print(f'ora, ora, temos um problema aqui...{categoria_usuario}')
@@ -179,7 +191,7 @@ class App:
     
         x = PrettyTable()
         x.field_names = ["Nome", "Peso", "IMC", "Categoria"]
-        x.add_row([self.user, self.weight, round(self.imc_usuario, 2), categoria_usuario])
+        x.add_row([self.user, self.weight, round(self.imc_usuario, 2), self.categoria_usuario])
         print(x)
 
     def generate_graph(self):
@@ -286,8 +298,174 @@ class App:
         
         # Construir o PDF com a lista 'story'
         doc.build(story)
+
+    # Funcoes propriedades para gerar PDF
+
+    def mm_to_point(self, mm):
+        return mm / 0.352777
     
+    def posicionar_texto_centro(self, pdf_canvas, text, page_width, page_height, y_distance):
+        text_width = pdf_canvas.stringWidth(text)
+        x_coordinate = (page_width - text_width) / 2
+        y_coordinate = (page_height - y_distance)
+        pdf_canvas.drawString(x_coordinate, y_coordinate, text)
+
+    def posicionar_texto_canto(self, pdf_canvas, text, page_height, y_distance):    
+        # Calcular a coordenada x para começar a partir da margem esquerda
+        x_coordinate = self.mm_to_point(20)
+        # Calcular a coordenada y
+        y_coordinate = page_height - y_distance
+        # Desenhar o texto
+        pdf_canvas.drawString(x_coordinate, y_coordinate, text)
+
+    def dataframe_to_table(self, dataframe):
+        data = [list(dataframe.columns)]
+        for row in dataframe.itertuples(index=False):
+            data.append(list(row))
+        return data
+
+
+    def generate_pdf_v3(self):
+        today = date.today().strftime("%Y-%m-%d")
+        pdf_filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
+        pdf = canvas.Canvas(pdf_filename, pagesize=A4)
+        page_width, page_height = A4
+        # pdf.drawString(self.mm_to_point(20), self.mm_to_point(100), 'Teste cabeçalho')
         
+        #titulo
+        pdf.setFont('Helvetica-Bold', 18)
+        text = "Relatório IMC"
+        top = self.mm_to_point(25)
+        self.posicionar_texto_centro(pdf, text, page_width, page_height, top)
+
+        # data
+        pdf.setFont('Helvetica', 12)
+        text = f'Data Emissão:    {date.today().strftime("%d-%m-%y")}'
+        y_distance = self.mm_to_point(48)
+        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+
+        # traço
+        margin = 20  # 2 cm em milímetros
+        pdf.line(margin, page_height - self.mm_to_point(50), page_width - margin, page_height - self.mm_to_point(50))
+        
+        # dados usuario
+        distancia = 60 #variavel para controlar a distancia horizontal entre os elementos
+        
+        pdf.setFont('Helvetica', 12)
+        text = f'Nome: {self.name}'
+        y_distance = self.mm_to_point(distancia)
+        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+        distancia = distancia + 5
+        
+        text = f'Idade: {self.age}'
+        y_distance = self.mm_to_point(distancia)
+        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+        distancia = distancia + 5
+
+        text = f'IMC: {round(self.imc_usuario, 2)}'
+        y_distance = self.mm_to_point(distancia)
+        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+        distancia = distancia + 5
+
+        text = f'Categoria: {self.categoria_usuario.title()}'
+        y_distance = self.mm_to_point(distancia)
+        self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+        distancia = distancia + 5
+
+        # traço
+        distancia = distancia + 5
+        margin = 20  # 2 cm em milímetros
+        pdf.line(margin, page_height - self.mm_to_point(distancia), page_width - margin, page_height - self.mm_to_point(distancia))
+        
+        # tabela_1 - Pesos Ideais
+        self.data = self.dataframe_to_table(self.df_ideal_weight)
+
+        elements=[]
+        table = Table(self.data)
+
+        # Estilo da tabela
+        doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
+        style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+        
+        table.setStyle(style)
+        elements.append(table)
+
+        # # Adicionar a tabela à página em uma posição específica (X, Y)
+        # table.wrapOn(doc, 400, 500)  # Posição X = 400, Posição Y = 500
+        # table.drawOn(doc, 100, 600)  # Posição X = 100, Posição Y = 600
+
+        doc.build(elements)
+
+        
+        # y_distance = self.mm_to_point(distancia)
+        # self.posicionar_texto_canto(pdf, text, page_height, y_distance)
+        # distancia = distancia + 5
+
+        pdf.save()
+    
+    def generate_pdf_v4(self):
+        today = date.today().strftime("%Y-%m-%d")
+        pdf_filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
+    
+        # Criação do documento PDF
+        doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
+        elements = []
+    
+        # Estilo de parágrafo
+        styles = getSampleStyleSheet()
+        estilo_normal = styles['Normal']
+        estilo_titulo = styles['Heading1']
+        estilo_titulo.alignment = 1  # 0 para alinhar à esquerda, 1 para centralizar, 2 para alinhar à direita
+        
+        # Título
+        titulo = Paragraph("Relatório IMC", estilo_titulo)
+        elements.append(titulo)
+    
+        # Data de Emissão
+        data_emissao = f'<b>Data Emissão:</b> {date.today().strftime("%d-%m-%y")}'
+        elements.append(Paragraph(data_emissao, estilo_normal))
+    
+        # Linha divisória
+        elements.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.black))
+    
+        # Dados do usuário
+        elementos_usuario = [
+            [Paragraph(f'<b>Nome:</b> {self.name}', estilo_normal)],
+            [Paragraph(f'<b>Idade:</b> {self.age}', estilo_normal)],
+            [Paragraph(f'<b>Peso:</b> {self.weight} kg', estilo_normal)],
+            [Paragraph(f'<b>Altura:</b> {self.height} m', estilo_normal)],
+            [Paragraph(f'<b>IMC:</b> {round(self.imc_usuario, 2)}', estilo_normal)],
+            [Paragraph(f'<b>Categoria:</b> {self.categoria_usuario.title()}', estilo_normal)],
+        ]
+        tabela_usuario = Table(elementos_usuario)
+        elements.append(tabela_usuario)
+    
+        # Linha divisória
+        elements.append(HRFlowable(width="100%", thickness=1, lineCap='round', color=colors.black))
+        elements.append(Paragraph("<br/><br/>", estilo_normal))
+        elements.append(Paragraph("<br/><br/>", estilo_normal))
+    
+        # Tabela de Pesos Ideais
+        tabela_pesos_ideais = Table(self.dataframe_to_table(self.df_ideal_weight))
+        tabela_pesos_ideais.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(tabela_pesos_ideais)
+    
+        # Construir o PDF
+        doc.build(elements)
         
     
 if __name__ == "__main__":
@@ -298,4 +476,4 @@ if __name__ == "__main__":
     app.calculate()
     app.generate_data()
     app.generate_graph()
-    app.generate_pdf_v2()
+    app.generate_pdf_v4()
