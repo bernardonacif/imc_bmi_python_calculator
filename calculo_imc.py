@@ -8,21 +8,10 @@ import sqlite3
 from datetime import date
 
 
-# from reportlab.lib import colors
-# from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer, KeepTogether, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-# from reportlab.lib import pagesizes
-# from reportlab.platypus import PageBreak
-# from reportlab.lib.units import inch
-
-#texto
-# from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-
-# tabela
 from reportlab.lib import colors
-# from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, HRFlowable
 
 
