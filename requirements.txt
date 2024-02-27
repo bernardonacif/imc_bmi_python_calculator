@@ -2,7 +2,9 @@ chardet==5.2.0
 contourpy==1.2.0
 cycler==0.12.1
 fonttools==4.47.2
+fpdf==1.7.2
 importlib-resources==6.1.1
+kaleido==0.2.1
 kiwisolver==1.4.5
 matplotlib==3.8.2
 numpy==1.26.3

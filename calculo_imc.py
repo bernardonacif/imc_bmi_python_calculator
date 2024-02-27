@@ -15,6 +15,11 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, HRFlowable
 
 
+# new PDF LIB v5
+
+from fpdf import FPDF
+
+
 
 class App:
     def __init__(self, name, age, weight, height, user, user_email):
@@ -348,7 +353,133 @@ class App:
     
         # Construir o PDF
         doc.build(elements)
+
+    # ----- V5 -----
+    def select_text(self, alias):
+        language = self.cfg_data['user_cfg']['language']
+        conn = sqlite3.connect('./SQLite/imc_bmi.db')
+        cursor = conn.cursor()
+        cursor.execute(f'''SELECT "{language}" FROM language WHERE alias = ?''', (alias,))
+        result = cursor.fetchone()
+        if result:
+            self.text = result[0]  # Extrai o texto da tupla
+            return self.text
+        else:
+            return None  # Retorna None se não houver correspondência para o alias
+
+    def create_title(self, today, pdf):
+        today = date.today().strftime("%Y-%m-%d")
+        pdf.set_font('Arial', 'B', 24)
+        pdf.ln(65)
+        # pdf.write(5, self.select_text('report_title'))
+        pdf.write(5, self.select_text("report_title"))
+        pdf.ln(10)
+        pdf.set_font('Arial', '', 16)
+        pdf.write(4, f'{today}')
+        pdf.ln(12)
+
+    def footer(self, pdf, number_page):
+        # footer_height = 10  # Altura do rodapé em pontos
+        # page_height = pdf.h  # Altura da página em pontos
+        # footer_y = page_height - footer_height  # Calcula a posição y do rodapé    
+        pdf.set_y(-31)
+        pdf.set_font('Arial', 'I', 8)
+        pdf.set_text_color(0, 0, 0)
+        # pdf.cell(0, 10, 'Página ' + str(self.page_no()), 0, 0, 'C')
+        page = self.select_text('page')
+        pdf.cell(0, 10, f'{page} {number_page}', 0, 0, 'C')
+
+    def header(self, pdf):
+        pdf.set_font('Arial','', 11)
+
+    # def use_data_info(self, pdf, bold_text, normal_text):
+    #     bold_width = pdf.get_string_width(bold_text)
+    #     pdf.set_font('Arial', 'B', 11)
+    #     pdf.cell(bold_width, 10, bold_text, 0, 0)
+    #     pdf.set_font('Arial', '', 11)
+    #     pdf.cell(0, 10, normal_text, 0, 1)
+
+    def use_data_info_v2(self, pdf, name, age, weight, height, bmi, category):
+        pdf.set_font('Arial', '', 10)
+        # pdf.cell(0, 10, f'{self.select_text("name")} {name}', 0, 1)
+        # pdf.cell(0, 10, f'{self.select_text("age")} {age}', 0, 1)
+        # pdf.cell(0, 10, f'{self.select_text("weight")} {weight} ', 0, 1)
+        # pdf.cell(0, 10, f'{self.select_text("height")} {height} ', 0, 1)
+        # pdf.cell(0, 10, f'{self.select_text("imc")} {round(bmi, 3)}', 0, 1)
+        # pdf.cell(0, 10, f'{self.select_text("category")} {category}', 0, 1)
+        # pdf.ln()
+        # Supondo que a largura da página seja 210mm (padrão A4)
+        pagina_largura = 210
         
+        # Dividindo a largura da página em três colunas
+        coluna_largura = pagina_largura / 3
+        
+        # Configurando o alinhamento para centralizar horizontalmente as células
+        alinhamento = "L"
+        
+        # Adicionando as células em três colunas de duas
+        pdf.cell(coluna_largura, 10, f'{self.select_text("name")} {name}', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("age")} {age}', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+        
+        pdf.cell(coluna_largura, 10, f'{self.select_text("weight")} {weight} ', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("height")} {height} ', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+        
+        pdf.cell(coluna_largura, 10, f'{self.select_text("imc")} {round(bmi, 3)}', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("category")} {category}', 0, 0, alinhamento)
+        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+
+
+
+    def graph_main(self, pdf):
+        image_path = "./tmp/grafico.png" 
+        imagem = Image(image_path)
+        original_width, original_height = imagem.drawWidth, imagem.drawHeight
+        reduced_width = original_width * 0.2 # Reduzir a largura
+        reduced_height = original_height * 0.2 # Reduzir a altura
+        x_position = (pdf.w - reduced_width) / 2  # Centralizar horizontalmente
+        y_position = pdf.get_y() + 1 # Posicionar após o elemento app.use_data_info_v2() com um espaço de 10 unidades
+        
+        pdf.image(image_path, x_position, y_position, reduced_width, reduced_height)
+
+    def disclaimer(self, pdf):
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(255, 0, 0)
+        pdf.ln(130)
+        pdf.write(5, self.select_text('disclaimer_resumido'))
+        
+    def generate_pfd_v5(self):
+        today = date.today().strftime("%Y-%m-%d")
+        pdf_filename = self.cfg_data['report_cfg']['format_name'].format(user=self.user, today=today)
+
+        WIDTH = 210
+        HEIGHT = 297
+
+        # config pdf
+        pdf = FPDF()
+
+        #  first page
+        pdf.add_page()
+        pdf.image('./resources/image.png', 0, 0, WIDTH) #descomentar depois 
+        app.create_title(today, pdf)
+        app.use_data_info_v2(pdf, self.name, self.age, self.weight, self.height, self.imc_usuario, self.categoria_usuario)
+        app.graph_main(pdf) 
+        app.disclaimer(pdf)
+        app.footer(pdf, 1)
+        
+
+        # second page
+        pdf.add_page()
+
+        # Definindo margens esquerda, topo e direita como 20 mm
+        pdf.set_margins(5, 5, 5)
+
+        pdf.output(pdf_filename)
+
+
+
+
     
 if __name__ == "__main__":
     # Exemplo de uso:
@@ -358,4 +489,5 @@ if __name__ == "__main__":
     app.calculate()
     app.generate_data()
     app.generate_graph()
-    app.generate_pdf_v4()
+    # app.generate_pdf_v4()
+    app.generate_pfd_v5()
