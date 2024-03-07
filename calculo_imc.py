@@ -82,11 +82,6 @@ class App:
         if self.weight >= 120:
           self.top_range_weight = self.weight + 20
         
-        # Underweight = <18.5
-        # Normal weight = 18.5–24.9
-        # Overweight = 25–29.9
-        # Obesity = BMI of 30 or greater
-        
         for i in range(0, self.top_range_weight):
             imc = i / (self.height ** 2)
             imc = round(imc, 2)
@@ -152,8 +147,6 @@ class App:
             categoria_base = self.select_text('normal_weight')
             
             # print(f'ora, ora, temos um problema aqui...{categoria_usuario}')
-
-          a = self.select_text('weight')
         
           self.df_filter = self.df[self.df[self.select_text('category')].between(categoria_base, categoria_top)]
           self.df_filter.loc[self.df_filter[self.select_text('weight')] == round_peso_usuario, 'user_'] = self.select_text('you')
@@ -165,14 +158,13 @@ class App:
           self.df_filter = self.df_filter.fillna('-')
         
         # print(df_filter.to_string(index=False))
-        print(self.df)
-        print(self.df_filter)
+        # print(self.df)
+        # print(self.df_filter)
 
         # Lista de DF Gerados 
         # df_ideal_weight -> Pesos Ideais. Todos os pesos para aquele tamanho
         # df_filter -> Comparativo. Onde o user está dentro da tbl
         # 
-        
         
         def print_tables():
             # Imprimir a tabelas ajustadas - desabilitado - apenas para debug ou visualizar no terminal
@@ -230,8 +222,6 @@ class App:
         # Exibir o gráfico
         # plt.show()
         plt.savefig('./tmp/grafico.png')
-
-    # Funcoes propriedades para gerar PDF
     
 if __name__ == "__main__":
     # Exemplo de uso:
