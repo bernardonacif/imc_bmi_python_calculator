@@ -7,7 +7,7 @@ import sqlite3
 # import os
 
 # Local libraries
-from calculo_imc_v2 import App as calculo
+from calculo_imc import App as calculo
 
 class App:
     def __init__(self, name, age, weight, height, user, user_email):

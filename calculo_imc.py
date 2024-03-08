@@ -7,6 +7,10 @@ import yaml
 import sqlite3
 from datetime import date
 
+# Local Libraries
+
+from select_text import MyClass
+
 class App:
     def __init__(self, name, age, weight, height, user, user_email):
         self.name = name
@@ -72,8 +76,48 @@ class App:
                print(f'Error to connect database. {e}')
             finally:
                conn.close()
+        print('foi o sql grava dados')
         # else:
         #    print('sql config OFF')
+
+    def grava_sql(self):
+        unit_type = self.cfg_data['user_cfg']['unit']
+        if self.cfg_data['sql_cfg']['use_sql'] == 1:
+            try:
+                conn = sqlite3.connect('./SQLite/imc_bmi.db')
+                cursor = conn.cursor()
+                try:
+                    # report_id|user_id|weight|height|imc_bmi|category|measures_type|date|
+                    cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
+                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, unit_type))
+                #     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
+                #   VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, MyClass().select_units('weight', 'units')))
+                    conn.commit()
+                except sqlite3.Error as e:
+                           print(f'Erro: SQLite insert error. {e}')     
+            except sqlite3.Error as e:
+               print(f'Error to connect database. {e}')
+            finally:
+               conn.close()
+
+    def category(self):
+        imc = self.weight / (self.height ** 2) 
+        
+        if imc < 18.5:
+            self.categoria = self.select_text('underweight')
+        elif 18.5 <= imc < 24.9:
+            self.categoria = self.select_text('normal_weight')
+        elif 25 <= imc < 29.9:
+            self.categoria = self.select_text('overweight')
+        elif 30 <= imc < 34.9:
+            self.categoria = self.select_text('obesity_1')
+        elif 35 <= imc < 39.9:
+            self.categoria = self.select_text('obesity_2')
+        else:
+            self.categoria = self.select_text('obesity_3')
+
+        return(self.categoria)
+
 
     def calculate(self):
         self.ideal_weight = []  # Definindo self.ideal_weight antes de usá-lo
@@ -106,89 +150,21 @@ class App:
             if 18.5 <= imc < 24.9:
               self.ideal_weight.append({self.select_text('weight'): i, self.select_text('imc'): imc, self.select_text('category'): categoria}) 
 
-    def generate_data(self):
-        # Criar DataFrame's a partir das listas
+            # gerar lista
+
+            self.dados.append({self.select_text('weight'): i, self.select_text('imc'): imc, self.select_text('category'): categoria})
+
+        return(self.imc_usuario)
+    
+    def generate_table(self):
+        print('retorno dos dados df')
         self.df = pd.DataFrame(self.dados)
-        self.df_ideal_weight = pd.DataFrame(self.ideal_weight)
-        # print(df)
-        
-        # Gravar dados do usuario na tbl SQLite
-        self.categoria_usuario = self.df.loc[self.df[self.select_text('imc')] <= self.imc_usuario, self.select_text('category')].iloc[-1]
-        
-        if self.cfg_data['sql_cfg']['use_sql'] == 1:
-            try:
-                conn = sqlite3.connect('./SQLite/imc_bmi.db')
-                cursor = conn.cursor()
-                try:
-                    # report_id|user_id|weight|height|imc_bmi|category|measures_type|date|
-                    cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria_usuario, self.unit_type))
-                    conn.commit()
-                except sqlite3.Error as e:
-                           print(f'Erro: SQLite insert error. {e}')     
-            except sqlite3.Error as e:
-               print(f'Error to connect database. {e}')
-            finally:
-               conn.close()
-        
-        # Modelando Tabela 2
-        round_peso_usuario = round(self.weight, 0)
-        peso_base = round_peso_usuario - 10
-        peso_top = round_peso_usuario + 10
-        
-        
-        if self.categoria_usuario != self.select_text('normal_weight'):
-          # descobrindo peso ideal
-          if self.categoria_usuario == self.select_text('underweight'):
-            categoria_top = self.select_text('normal_weight')
-            categoria_base = self.categoria_usuario
-          else:
-            categoria_top = self.categoria_usuario
-            categoria_base = self.select_text('normal_weight')
-            
-            # print(f'ora, ora, temos um problema aqui...{categoria_usuario}')
-        
-          self.df_filter = self.df[self.df[self.select_text('category')].between(categoria_base, categoria_top)]
-          self.df_filter.loc[self.df_filter[self.select_text('weight')] == round_peso_usuario, 'user_'] = self.select_text('you')
-          self.df_filter = self.df_filter.fillna('-')
-        
-        else:  
-          self.df_filter = self.df[self.df[self.select_text('weight')].between(peso_base, peso_top)]
-          self.df_filter.loc[self.df_filter[self.select_text('weight')] == round_peso_usuario, 'user_'] = self.select_text('you')
-          self.df_filter = self.df_filter.fillna('-')
-        
-        # print(df_filter.to_string(index=False))
-        # print(self.df)
-        # print(self.df_filter)
 
-        # Lista de DF Gerados 
-        # df_ideal_weight -> Pesos Ideais. Todos os pesos para aquele tamanho
-        # df_filter -> Comparativo. Onde o user está dentro da tbl
-        # 
-        
-        def print_tables():
-            # Imprimir a tabelas ajustadas - desabilitado - apenas para debug ou visualizar no terminal
-            print('Tabela 1: Pesos ideais.')
-            
-            tabela_pretty = PrettyTable(self.df_ideal_weight.columns.tolist())
-            tabela_pretty.add_rows(self.df_ideal_weight.values)
-            print(tabela_pretty)
-            
-            print('Tabela 2: Comparativo.')
-            
-            tabela_pretty = PrettyTable(self.df_filter.columns.tolist())
-            tabela_pretty.add_rows(self.df_filter.values)
-            print(tabela_pretty)
-            
-            print('Tabela 3: Dados usuário.')
-        
-            x = PrettyTable()
-            x.field_names = ["Nome", "Peso", "IMC", "Categoria"]
-            x.add_row([self.user, self.weight, round(self.imc_usuario, 2), self.categoria_usuario])
-            print(x)
-
+        return(self.df)
+    
     def generate_graph(self):
         # Ajuste df para indices do grafico
+        self.generate_table()
         self.df = self.df[self.df[self.select_text('weight')] % 10 == 0]
         
         # Criar gráfico de linha com degradê
@@ -209,7 +185,7 @@ class App:
         ax.grid(True, linestyle='--', alpha=0.5)
         
         # Adicionar rótulos e título
-        ax.set_xlabel(self.select_text('weight')+'('+app.unit_type("weight")+')')
+        ax.set_xlabel(self.select_text('weight')+'('+MyClass().select_units('weight', 'units')+')')
         ax.set_ylabel(self.select_text('imc'))
         ax.set_title(self.select_text('gaph_title'))
         
@@ -222,14 +198,13 @@ class App:
         # Exibir o gráfico
         # plt.show()
         plt.savefig('./tmp/grafico.png')
+
+
     
+    
+    
+        
+
 if __name__ == "__main__":
     # Exemplo de uso:
-    app = App(name="João", age=30, weight=70, height=1.75, user="joao123", user_email="joao@example.com")
-    app.config()
-    app.check_user()
-    app.calculate()
-    app.generate_data()
-    app.generate_graph()
-    # app.generate_pdf_v4()
-    # app.generate_pfd_v5()
+    print('hello, my friends :)')
