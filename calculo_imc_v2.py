@@ -81,6 +81,7 @@ class App:
         #    print('sql config OFF')
 
     def grava_sql(self):
+        unit_type = self.cfg_data['user_cfg']['unit']
         if self.cfg_data['sql_cfg']['use_sql'] == 1:
             try:
                 conn = sqlite3.connect('./SQLite/imc_bmi.db')
@@ -88,9 +89,9 @@ class App:
                 try:
                     # report_id|user_id|weight|height|imc_bmi|category|measures_type|date|
                     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, MyClass().select_units('weight', 'units')))
+                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, unit_type))
                 #     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                #   VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, self.select_text('')))
+                #   VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, MyClass().select_units('weight', 'units')))
                     conn.commit()
                 except sqlite3.Error as e:
                            print(f'Erro: SQLite insert error. {e}')     
