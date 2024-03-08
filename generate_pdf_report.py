@@ -33,7 +33,7 @@ class App:
     def background(self, pdf, WIDTH):
         # language = self.cfg_data['user_cfg']['language']
         if self.language == 'PT/BR':
-            self.background_img = './resources/IMC-DATA.png'
+            self.background_img = './resources/IMC-DATA_v3.png'
         elif self.language == 'ENG/US':
             self.background_img = './resources/BMI-DATA.png'
         else:
@@ -51,7 +51,21 @@ class App:
             return self.text
         else:
             return None  # Retorna None se não houver correspondência para o alias
-        
+    
+    def insert_datetime(self, today, pdf):
+        if self.language == 'PT/BR':
+            today = date.today().strftime("%d-%m-%Y")
+        elif self.language == 'ENG/US':
+            today = date.today().strftime("%Y-%m-%d")
+        else:
+            today = date.today().strftime("%Y-%m-%d")
+        pdf.set_font('helvetica', '', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.ln(30)
+        pdf.write(4, f' {today}')    
+        pdf.set_text_color(0, 0, 0)
+    
+    
     def create_title(self, today, pdf):
         if self.language == 'PT/BR':
             today = date.today().strftime("%d-%m-%Y")
@@ -68,6 +82,7 @@ class App:
         pdf.ln(12)
 
     def use_data_info_v2(self, pdf, name, age, weight, height, bmi, category):
+        pdf.ln(12)
         pdf.set_font('helvetica', '', 10)
         # pdf.cell(0, 10, f'{self.select_text("name")} {name}', 0, 1)
         # pdf.cell(0, 10, f'{self.select_text("age")} {age}', 0, 1)
@@ -123,8 +138,8 @@ class App:
         pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', 0, 1, alinhamento)  # Ajustado para nova linha
 
     def objective(self, pdf):
-        y_position = pdf.get_y()
-        pdf.set_y(y_position + 10)
+        # y_position = pdf.get_y()
+        # pdf.set_y(y_position + 5)
         pdf.set_font('helvetica', 'B', 10)
         y_position = pdf.get_y()
         pdf.cell(0, 10, self.select_text("objective_title"))
@@ -144,6 +159,12 @@ class App:
         y_position = pdf.get_y() + 40  # Posicionar após o elemento app.use_data_info_v2() com um espaço de 10 unidades
         # Adicionar o gráfico ao PDF
         pdf.image(image_path, x=x_position, y=y_position, w=100)
+
+    def disclaimer(self, pdf):
+        pdf.set_font('helvetica','' , 8)
+        pdf.set_text_color(255, 0, 0)
+        pdf.ln(130)
+        pdf.write(5, self.select_text('disclaimer_resumido'))
     
     def footer(self, pdf, number_page):
         # footer_height = 10  # Altura do rodapé em pontos
@@ -170,11 +191,13 @@ class App:
         #  Firts Page
         pdf.add_page()
         self.background(pdf, WIDTH)
-        self.create_title(today, pdf)
+        self.insert_datetime(today,pdf)
+        # self.create_title(today, pdf) 
         self.use_data_info_v2(pdf, self.name, self.age, self.weight, self.height, user_bmi, user_category)
         # self.add_data(pdf, self.name, self.age, self.weight, self.height, user_bmi, user_category)
         self.graph_main(pdf)
         self.objective(pdf)
+        self.disclaimer(pdf)
         
 
 
