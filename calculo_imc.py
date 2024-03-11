@@ -5,7 +5,7 @@ from matplotlib import cm
 from prettytable import PrettyTable
 import yaml
 import sqlite3
-from datetime import date
+from datetime import datetime, timezone, timedelta
 
 # Local Libraries
 
@@ -52,6 +52,13 @@ class App:
         else:
             return None  # Retorna None se não houver correspondência para o alias
     
+    def set_gmt(self):
+        if self.cfg_data['sql_cfg']['type'] == 'sqlite':
+            gmt = self.cfg_data['user_cfg']['GMT']
+            fuso_horario_local = datetime.now(timezone(timedelta(hours=gmt)))
+            timestamp_local = fuso_horario_local.strftime('%Y-%m-%d %H:%M:%S')
+        return(timestamp_local)
+    
     def check_user(self):
         if self.cfg_data['sql_cfg']['use_sql'] == 1:
             try:
@@ -62,9 +69,10 @@ class App:
                 existing_user = cursor.fetchone()
                 if existing_user is None:
                     try:
+                        timestamp_local = self.set_gmt()
                         # Se o usuário não existir, inserir um novo usuário
                         cursor.execute('''INSERT INTO "USER" ("name", "email", "create")
-                                          VALUES (?, ?, CURRENT_TIMESTAMP)''', (self.user, self.user_email))
+                                          VALUES (?, ?, ?)''', (self.user, self.user_email, timestamp_local))
                         conn.commit()
                         cursor.execute('''SELECT last_insert_rowid()''')
                         self.user_id = cursor.fetchone()[0]
@@ -87,11 +95,10 @@ class App:
                 conn = sqlite3.connect('./SQLite/imc_bmi.db')
                 cursor = conn.cursor()
                 try:
+                    timestamp_local = self.set_gmt()
                     # report_id|user_id|weight|height|imc_bmi|category|measures_type|date|
                     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, unit_type))
-                #     cursor.execute('''INSERT INTO "user_reports" ("user_id", "weight", "height", "imc_bmi", "category", "measures_type", "date")
-                #   VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, MyClass().select_units('weight', 'units')))
+                  VALUES (?, ?, ?, ?, ?, ?, ?)''', (self.user_id, self.weight, self.height, self.imc_usuario, self.categoria, unit_type, timestamp_local))
                     conn.commit()
                 except sqlite3.Error as e:
                            print(f'Erro: SQLite insert error. {e}')     
@@ -199,11 +206,120 @@ class App:
         # plt.show()
         plt.savefig('./tmp/grafico.png')
 
+    def generate_graph_v2(self):
+        # Ajuste df para índices do gráfico
+        self.generate_table()
+        self.df = self.df[self.df[self.select_text('weight')] % 10 == 0]
+        
+        # Criar gráfico de dispersão com cores para cada categoria
+        cores = {
+            self.select_text('underweight'): 'blue',
+            self.select_text('normal_weight'): 'green',
+            self.select_text('overweight'): 'yellow',
+            self.select_text('obesity_1'): 'orange',
+            self.select_text('obesity_2'): 'red',
+            self.select_text('obesity_3'): 'purple'
+        }
+        
+        fig, ax = plt.subplots()
+        
+        for categoria, cor in cores.items():
+            subset = self.df[self.df[self.select_text('category')] == categoria]
+            ax.scatter(subset[self.select_text('weight')], subset[self.select_text('imc')], color=cor, label=categoria, s=100)
+        
+        # Adicionar o ponto do usuário com quadrado transparente e borda colorida
+        categoria_usuario = self.dados[int(self.weight)][self.select_text('category')]
+        borda_cor = cores[categoria_usuario]  # Cor da borda de acordo com a categoria
+        ax.scatter(self.weight, self.imc_usuario, edgecolors=borda_cor, linewidths=2, label=self.user, s=150, marker='s')
+        
+        # Adicionar linhas de grade
+        ax.grid(True, linestyle='--', alpha=0.5)
+        
+        # Adicionar rótulos e título
+        ax.set_xlabel(self.select_text('weight') + '(' + MyClass().select_units('weight', 'units') + ')')
+        ax.set_ylabel(self.select_text('imc'))
+        ax.set_title(self.select_text('graph_title'))
+        
+        # Adicionar legenda
+        ax.legend()
+        
+        # Definir rótulos no eixo horizontal a cada intervalo de 10 kg
+        ax.set_xticks(range(0, self.top_range_weight, 10))
+        
+        # Exibir o gráfico
+        # plt.show()
+        plt.savefig('./tmp/grafico.png')
 
     
+    def historical_graph_old(self, table):
+        print(self.user_id)
+        gera_grafico = 0
+        try:
+            conn = sqlite3.connect('./SQLite/imc_bmi.db')
+            cursor = conn.cursor()
+            try:
+                query = f'SELECT weight, date FROM {table} WHERE "user_id" = {self.user_id}'
+                cursor.execute(query)
+                resultados = cursor.fetchall()
+                gera_grafico = 1
+            except sqlite3.Error as e:
+                       print(f'Erro: SQLite insert error. {e}')     
+        except sqlite3.Error as e:
+           print(f'Error to connect database. {e}')
+        finally:
+           conn.close()
+
+        if gera_grafico == 1:
+            weight = [resultado[0] for resultado in resultados]
+            date = [resultado[1] for resultado in resultados]
+
+            plt.bar(date, weight)
+            plt.xlabel('data')
+            plt.ylabel('peso')
+            plt.title('Contagem de itens por categoria')
+            plt.savefig('./tmp/grafico_1.png')
+            # plt.show()
     
+    def historical_graph(self, table):
+        print(self.user_id)
+        gera_grafico = 0
+        try:
+            conn = sqlite3.connect('./SQLite/imc_bmi.db')
+            cursor = conn.cursor()
+            try:
+                query = f'SELECT weight, date FROM {table} WHERE "user_id" = {self.user_id}'
+                cursor.execute(query)
+                resultados = cursor.fetchall()
+                gera_grafico = 1
+            except sqlite3.Error as e:
+                print(f'Erro: SQLite insert error. {e}')     
+        except sqlite3.Error as e:
+            print(f'Error to connect database. {e}')
+        finally:
+            conn.close()
     
-        
+        if gera_grafico == 1:
+            weight = [resultado[0] for resultado in resultados]
+            date = [resultado[1] for resultado in resultados]
+    
+            # Criar uma nova figura para o segundo gráfico
+            plt.figure()
+    
+            plt.bar(date, weight)
+            plt.xlabel('data')
+            plt.ylabel('peso')
+            plt.title('Contagem de itens por categoria')
+            plt.xticks(rotation=90)
+            plt.savefig('./tmp/grafico_1.png')
+            plt.show()
+
+    
+
+
+
+
+
+      
 
 if __name__ == "__main__":
     # Exemplo de uso:

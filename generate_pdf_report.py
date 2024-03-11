@@ -84,13 +84,6 @@ class App:
     def use_data_info_v2(self, pdf, name, age, weight, height, bmi, category):
         pdf.ln(12)
         pdf.set_font('helvetica', '', 10)
-        # pdf.cell(0, 10, f'{self.select_text("name")} {name}', 0, 1)
-        # pdf.cell(0, 10, f'{self.select_text("age")} {age}', 0, 1)
-        # pdf.cell(0, 10, f'{self.select_text("weight")} {weight} ', 0, 1)
-        # pdf.cell(0, 10, f'{self.select_text("height")} {height} ', 0, 1)
-        # pdf.cell(0, 10, f'{self.select_text("imc")} {round(bmi, 3)}', 0, 1)
-        # pdf.cell(0, 10, f'{self.select_text("category")} {category}', 0, 1)
-        # pdf.ln()
         # Supondo que a largura da página seja 210mm (padrão A4)
         pagina_largura = 210
         
@@ -112,18 +105,6 @@ class App:
         pdf.cell(coluna_largura, 10, f'{self.select_text("imc_title")} {round(bmi, 3)}', 0, 0, alinhamento)
         pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', 0, 0, alinhamento)
         pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
-
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("name_title")} {name}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("age_title")} {age}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("weight_title")} {weight}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, '', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("height_title")} {height}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("imc_title")} {round(bmi, 3)}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        # pdf.cell(coluna_largura, 10, '', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
-        
-        # pdf.cell(coluna_largura, 10, '', new_x=XPos.RIGHT, new_y=YPos.TOP, align=alinhamento)
     
     def add_data(self, pdf, name, age, weight, height, bmi, category):
         pagina_largura = 210
@@ -167,9 +148,6 @@ class App:
         pdf.write(5, self.select_text('disclaimer_resumido'))
     
     def footer(self, pdf, number_page):
-        # footer_height = 10  # Altura do rodapé em pontos
-        # page_height = pdf.h  # Altura da página em pontos
-        # footer_y = page_height - footer_height  # Calcula a posição y do rodapé    
         pdf.set_y(-31)
         pdf.set_font('helvetica', 'I', 8)
         pdf.set_text_color(0, 0, 0)
@@ -205,20 +183,7 @@ class App:
         pdf.output(pdf_filename)
 
     
-if __name__ == "__main__":
-    # app = App(name="João", age=30, weight=70, height=1.75, user="joao123", user_email="joao@example.com")
-    # name = "Exemplo"
-    # age = 30
-    # weight = 70  # Coloque o peso desejado aqui
-    # height = 1.75  # Coloque a altura desejada aqui
-    # user = "exemplo"
-    # user_email = "exemplo@example.com"
-
-    # app_instance = App(name, age, weight, height, user, user_email)
-    # app_instance.config()
-
-    # app_instance.calculate()
-    
+if __name__ == "__main__":    
     name = "000teste_import_file"
     age = 30
     weight = 70  # Coloque o peso desejado aqui
@@ -237,11 +202,9 @@ if __name__ == "__main__":
     print(category)
     a.grava_sql()
     graph = a.generate_graph()
-    
+    graph_1 = a.historical_graph('user_reports')
 
-    # reunindo dados e gravando dados na tbl
-
-    # gerando grafico
+    graph_1
 
     # montando pdf
 

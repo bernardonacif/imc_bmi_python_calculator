@@ -9,8 +9,10 @@ user_cfg:
     - imperial
   language: PT/BR
   unit: metric
+  GMT: -3
 sql_cfg:
   use_sql: 1
+  type: sqlite
 report_cfg: 
   type_support: 
     - pdf
