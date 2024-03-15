@@ -6,6 +6,9 @@ import yaml
 import sqlite3
 # import os
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 # Local libraries
 from calculo_imc import App as calculo
 
@@ -94,17 +97,30 @@ class App:
         alinhamento = "L"
         
         # Adicionando as células em três colunas de duas
-        pdf.cell(coluna_largura, 10, f'{self.select_text("name_title")} {name}', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, f'{self.select_text("age_title")} {age}', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, f'{self.select_text("weight_title")} {weight} ', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("name_title")} {name}', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("age_title")} {age}', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("weight_title")} {weight} ', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+
+
         
         # pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
         
-        pdf.cell(coluna_largura, 10, f'{self.select_text("height_title")} {height} ', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, f'{self.select_text("imc_title")} {round(bmi, 3)}', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', 0, 0, alinhamento)
-        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("height_title")} {height} ', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("imc_title")} {round(bmi, 3)}', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', 0, 0, alinhamento)
+        # pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento)
+
+        pdf.cell(coluna_largura, 10, f'{self.select_text("name_title")} {name}', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("age_title")} {age}', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("weight_title")} {weight} ', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("height_title")} {height} ', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("imc_title")} {round(bmi, 3)}', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, f'{self.select_text("category_title")} {category}', 0, 0, alinhamento, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        pdf.cell(coluna_largura, 10, '', 0, 1, alinhamento, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        
     
     def add_data(self, pdf, name, age, weight, height, bmi, category):
         pagina_largura = 210
@@ -196,10 +212,10 @@ if __name__ == "__main__":
     a.config()
     a.check_user()
     bmi = a.calculate()
-    print(bmi)
+    # print(bmi)
     bmi = round(bmi, 3)
     category = a.category()
-    print(category)
+    # print(category)
     a.grava_sql()
     graph = a.generate_graph()
     graph_1 = a.historical_graph('user_reports')

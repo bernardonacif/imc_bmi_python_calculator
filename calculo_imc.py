@@ -84,7 +84,7 @@ class App:
                print(f'Error to connect database. {e}')
             finally:
                conn.close()
-        print('foi o sql grava dados')
+        # print('foi o sql grava dados')
         # else:
         #    print('sql config OFF')
 
@@ -164,7 +164,7 @@ class App:
         return(self.imc_usuario)
     
     def generate_table(self):
-        print('retorno dos dados df')
+        # print('retorno dos dados df')
         self.df = pd.DataFrame(self.dados)
 
         return(self.df)
@@ -180,10 +180,15 @@ class App:
         
         fig, ax = plt.subplots()
         
+        # for categoria, cor in cores.items():
+        #     subset = self.df[self.df[self.select_text('category')] == categoria]
+        #     ax.scatter(subset[self.select_text('weight')], subset[self.select_text('imc')], c=[cor], label=categoria, cmap='viridis', s=100)
         for categoria, cor in cores.items():
             subset = self.df[self.df[self.select_text('category')] == categoria]
-            ax.scatter(subset[self.select_text('weight')], subset[self.select_text('imc')], c=[cor], label=categoria, cmap='viridis', s=100)
-        
+            ax.scatter(subset[self.select_text('weight')], subset[self.select_text('imc')], c=[cor], label=categoria, s=100)
+
+
+
         # Adicionar o ponto do usuário com quadrado transparente e borda colorida
         borda_cor = cores[self.dados[int(self.weight)][self.select_text('category')]]  # Cor da borda de acordo com a categoria
         ax.scatter(self.weight, self.imc_usuario, color='none', edgecolors=borda_cor, linewidths=2, label=self.user, s=150, marker='s')
@@ -252,7 +257,7 @@ class App:
 
     
     def historical_graph_old(self, table):
-        print(self.user_id)
+        # print(self.user_id)
         gera_grafico = 0
         try:
             conn = sqlite3.connect('./SQLite/imc_bmi.db')
@@ -281,7 +286,7 @@ class App:
             # plt.show()
     
     def historical_graph(self, table):
-        print(self.user_id)
+        # print(self.user_id)
         gera_grafico = 0
         try:
             conn = sqlite3.connect('./SQLite/imc_bmi.db')
@@ -311,7 +316,7 @@ class App:
             plt.title('Contagem de itens por categoria')
             plt.xticks(rotation=90)
             plt.savefig('./tmp/grafico_1.png')
-            plt.show()
+            # plt.show()
 
     
 
